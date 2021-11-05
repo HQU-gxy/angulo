@@ -1,39 +1,83 @@
 from flask import Flask, render_template, Response
 import cv2
+import time
+import threading
 
 app = Flask(__name__, static_url_path='', static_folder='static')
 
-# This is the test msg for sync
-def find_camera(id):
-    """
-    for cctv camera use rtsp://username:password@ip_address:554/user=username_password='password'_channel=channel_number_stream=0.sdp' instead of camera
-    for webcam use zero(0)
-    """
-    cameras = ["rtsp://127.0.0.1:8554/unicast", "rtsp://192.168.137.49:8554/unicast"]
-    return cameras[int(id)]
+main_cam_url = "rtsp://192.168.137.161:8554/unicast"
+alt_cam_url = "rtsp://192.168.137.49:8554/unicast"
 
-def gen_frames(camera_id):
-    """Generate frame by OpenCV from video soure by camera id"""
-    cam = find_camera(camera_id)
-    cap=  cv2.VideoCapture(cam)
-    while True:
-        # for cap in caps:
-        # # Capture frame-by-frame
+class MainCamera(object):
+    def __init__(self, url): 
+        self.url = url
+        # self.cap = cv2.VideoCapture(url)
+    def gen_frames(self):
+        """Generate frame by OpenCV from video soure by camera id"""
+        bg_subtractor = cv2.createBackgroundSubtractorMOG2(detectShadows=True)
+        erode_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+        dilate_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
+
+        cap = cv2.VideoCapture(self.url)
         success, frame = cap.read()  # read the camera frame
-        if not success:
-            break
-        else:
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')  # concat frame one by one and show result
+        while True:
+            # for cap in caps:
+            # # Capture frame-by-frame
+            if not success:
+                break
+            else:
+                # ret, buffer = cv2.imencode('.jpg', frame)
 
+                fg_mask = bg_subtractor.apply(frame)
+                _, thresh = cv2.threshold(fg_mask, 244, 255, cv2.THRESH_BINARY)
+                cv2.erode(thresh, erode_kernel, thresh, iterations=2)
+                cv2.dilate(thresh, dilate_kernel, thresh, iterations=2)
+                contours, hier = cv2.findContours(thresh, cv2.RETR_EXTERNAL,
+                                                cv2.CHAIN_APPROX_SIMPLE)
+                for c in contours:
+                    if cv2.contourArea(c) > 1000:
+                        x, y, w, h = cv2.boundingRect(c)
+                        cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 255, 0), 2)
+
+                ret, buffer = cv2.imencode('.jpg', frame)
+                framebytes = buffer.tobytes()
+                yield (b'--frame\r\n'
+                    b'Content-Type: image/jpeg\r\n\r\n' + framebytes + b'\r\n')
+                success, frame = cap.read()
+                # concat frame one by one and show result
+
+class AltCamera(object):
+    def __init__(self, url): 
+        self.url = url
+        # self.cap = cv2.VideoCapture(url)
+    def gen_frames(self):
+        """Generate frame by OpenCV from video soure by camera id"""
+        cap = cv2.VideoCapture(self.url)
+        while True:
+            # for cap in caps:
+            # # Capture frame-by-frame
+            success, frame = cap.read()  # read the camera frame
+            if not success:
+                break
+            else:
+                ret, buffer = cv2.imencode('.jpg', frame)
+                frame = buffer.tobytes()
+                yield (b'--frame\r\n'
+                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+                # concat frame one by one and show result
+
+main_cam = MainCamera(main_cam_url)
+alt_cam = AltCamera(alt_cam_url)
 
 @app.route('/video_feed/<string:id>/', methods=["GET"])
 def video_feed(id):
     """Video streaming route. Put this in the src attribute of an img tag."""
-    return Response(gen_frames(id),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+    if int(id) == 0:
+        return Response(main_cam.gen_frames(),
+                        mimetype='multipart/x-mixed-replace; boundary=frame')
+    else:
+        return Response(alt_cam.gen_frames(),
+                        mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 @app.route('/', methods=["GET"])
@@ -43,4 +87,4 @@ def index():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)
