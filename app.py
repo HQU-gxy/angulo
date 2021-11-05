@@ -1,16 +1,19 @@
 from flask import Flask, render_template, Response
-from cv2 import cv2
+import cv2
 
 app = Flask(__name__, static_url_path='', static_folder='static')
 
 # This is the test msg for sync
 def find_camera(id):
+    """
+    for cctv camera use rtsp://username:password@ip_address:554/user=username_password='password'_channel=channel_number_stream=0.sdp' instead of camera
+    for webcam use zero(0)
+    """
     cameras = ["rtsp://127.0.0.1:8554/unicast", "rtsp://192.168.137.49:8554/unicast"]
     return cameras[int(id)]
-#  for cctv camera use rtsp://username:password@ip_address:554/user=username_password='password'_channel=channel_number_stream=0.sdp' instead of camera
-#  for webcam use zero(0)
 
 def gen_frames(camera_id):
+    """Generate frame by OpenCV from video soure by camera id"""
     cam = find_camera(camera_id)
     cap=  cv2.VideoCapture(cam)
     while True:
@@ -35,6 +38,7 @@ def video_feed(id):
 
 @app.route('/', methods=["GET"])
 def index():
+    """Render"""
     return render_template('index.html')
 
 

@@ -1,2 +1,4 @@
 *.zip
 .metals
+.clj-kondo
+.lsp
