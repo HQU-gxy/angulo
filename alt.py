@@ -6,10 +6,9 @@ import queue
 
 app = Flask(__name__, static_url_path='', static_folder='static')
 
-# main_cam_url = "rtsp://192.168.137.161:8554/unicast"
-main_cam_url = 0
-
-class MainCamera(object):
+# alt_cam_url = "rtsp://127.0.0.1:8554/unicast"
+alt_cam_url = 0
+class AltCamera(object):
     def __init__(self, url): 
         self.url = url
         # self.cap = cv2.VideoCapture(url)
@@ -47,25 +46,12 @@ class MainCamera(object):
                 success, frame = cap.read()
                 # concat frame one by one and show result
 
-main_cam = MainCamera(main_cam_url)
-# alt_cam = AltCamera(alt_cam_url)
+alt_cam = AltCamera(alt_cam_url)
 
 @app.route('/video_feed/<string:id>/', methods=["GET"])
 def video_feed(id):
-    """Video streaming route. Put this in the src attribute of an img tag."""
-    if int(id) == 0:
-        return Response(main_cam.gen_frames(),
-                        mimetype='multipart/x-mixed-replace; boundary=frame')
-    else:
-        return Response(alt_cam.gen_frames(),
-                        mimetype='multipart/x-mixed-replace; boundary=frame')
-
-
-@app.route('/', methods=["GET"])
-def index():
-    """Render"""
-    return render_template('index.html')
-
+    return Response(alt_cam.gen_frames(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5001, debug=True)
