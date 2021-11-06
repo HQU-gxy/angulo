@@ -18,10 +18,10 @@ main_cam_url = 0
 main_cam = MainCamera(main_cam_url, app.logger)
 # alt_cam = AltCamera(alt_cam_url)
 
-@app.route("/peroid")
-def get_peroid():
+@app.route("/period")
+def get_period():
     return jsonify({
-            "peroid": list(main_cam.get_peroid())
+            "period": list(main_cam.get_period())
         })
 
 @app.route("/points")

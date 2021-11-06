@@ -1,5 +1,5 @@
-const peroid_url = `http://${window.location.host}/peroid`
-const peroid_half_max_len = 20
+const period_url = `http://${window.location.host}/period`
+const period_half_max_len = 20
 
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -30,16 +30,16 @@ function filterOutliers(someArray) {
   return values.filter((x) => (x >= minValue) && (x <= maxValue));
 }
 
-function filterPeriod(orig_peroid){
-  if (orig_peroid.length > Math.floor(peroid_half_max_len/2)){
-    const filter_peroid = filterOutliers(orig_peroid)
-    if (filter_peroid.length != orig_peroid.length){
-      console.log("orig",orig_peroid)
-      console.log("filterd", filter_peroid)
+function filterPeriod(orig_period){
+  if (orig_period.length > Math.floor(period_half_max_len/2)){
+    const filter_period = filterOutliers(orig_period)
+    if (filter_period.length != orig_period.length){
+      console.log("orig",orig_period)
+      console.log("filterd", filter_period)
     }
-    return filter_peroid
+    return filter_period
   } else {
-    return orig_peroid
+    return orig_period
   }
 }
 
@@ -59,47 +59,47 @@ function init() {
 
   // Calculate Average
   const average = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;
-  async function subscribe_peroid() {
-    let response = await fetch(peroid_url);
+  async function subscribe_period() {
+    let response = await fetch(period_url);
 
     if (response.status == 502) {
       // 状态 502 是连接超时错误，
       // 连接挂起时间过长时可能会发生，
       // 远程服务器或代理会关闭它
       // 让我们重新连接
-      await subsccribe_peroid();
+      await subsccribe_period();
     } else if (response.status != 200) {
       console.error(response.statusText);
       // 一秒后重新连接
       await new Promise(resolve => setTimeout(resolve, 1000));
-      await subscribe_peroid();
+      await subscribe_period();
     } else {
       let data = await response.json()
-      let peroid = filterPeriod(data.peroid)
-      const table = document.getElementById("main-peroid-tab")
+      let period = filterPeriod(data.period)
+      const table = document.getElementById("main-period-tab")
       table.replaceChildren()
-      if (peroid.length > 0) {
-        generateTable(table, peroid)
-        document.getElementById("main-avg").innerHTML = average(peroid)
+      if (period.length > 0) {
+        generateTable(table, period)
+        document.getElementById("main-avg").innerHTML = average(period)
       }
       // 再次调用 subscribe() 以获取下一条消息
       await new Promise(resolve => setTimeout(resolve, 1000));
-      await subscribe_peroid();
+      await subscribe_period();
     }
   }
 
-  // fetch(peroid_url).then(res=> res.json()).then(data => {
+  // fetch(period_url).then(res=> res.json()).then(data => {
   //   console.log(data)
-  //   document.getElementById("main-peroid").innerHTML = data.peroid
+  //   document.getElementById("main-period").innerHTML = data.period
   // })
 
   
-  subscribe_peroid()
+  subscribe_period()
   document.getElementById("refresh").addEventListener("click", (e) => {
-    fetch(peroid_url).then(res => res.json()).then(data => {
+    fetch(period_url).then(res => res.json()).then(data => {
       console.log(data)
-      document.getElementById("main-peroid").innerHTML = data.peroid
-      document.getElementById("main-avg").innerHTML = average(data.peroid)
+      document.getElementById("main-period").innerHTML = data.period
+      document.getElementById("main-avg").innerHTML = average(data.period)
     })
   })
 }

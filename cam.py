@@ -16,7 +16,7 @@ class Camera(object):
         self.pts = []
         self.logger = logger
         # self.cap = cv2.VideoCapture(url)
-    def get_peroid(self):
+    def get_period(self):
         return self.half_period
     def get_points(self):
         return self.pts
