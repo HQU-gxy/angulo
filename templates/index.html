@@ -13,7 +13,7 @@
 
     <title>Multiple Live Streaming</title>
 </head>
-<body>
+<body onload="init()">
 <div class="container">
     <h3 class="mb-3 mt-5">Multiple Live Streaming</h3>
     <div class="row">
@@ -23,6 +23,9 @@
                 <div class="card-body">
                     <img alt="main cam" src="{{ url_for('video_feed', id='0') }}" width="100%">
                 </div>
+                <div id="main-peroid"></div>
+                <div><strong id="main-avg">0</strong></div>
+                <button id="refresh" type="button">Click Me!</button>
             </div>
         </div>
         <div class="col-xs-12 col-sm-6">
