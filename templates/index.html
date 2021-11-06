@@ -9,11 +9,14 @@
     <link rel="stylesheet" href="css/bootstrap.css" crossorigin="anonymous">
     <link rel="stylesheet" href="css/style.css" crossorigin="anonymous">
     <script src="js/bootstrap.min.js"></script>
-    <script src="js/script.js"></script>
+    <script src="js/myscript.js"></script>
 
     <title>Multiple Live Streaming</title>
 </head>
-<body onload="init()">
+<body>
+
+
+
 <div class="container">
     <h3 class="mb-3 mt-5">Multiple Live Streaming</h3>
     <div class="row">
@@ -24,6 +27,7 @@
                     <img alt="main cam" src="{{ url_for('video_feed', id='0') }}" width="100%">
                 </div>
                 <div id="main-peroid"></div>
+                <table id="main-peroid-tab" class="table"></table>
                 <div><strong id="main-avg">0</strong></div>
                 <button id="refresh" type="button">Click Me!</button>
             </div>
