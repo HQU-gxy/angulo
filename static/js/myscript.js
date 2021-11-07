@@ -1,6 +1,6 @@
 const period_url = `http://${window.location.host}/period`
 const points_url = `http://${window.location.host}/extreme_points`
-const alt_host = "192.168.137.96:5001"
+const alt_host = "192.168.137.200:5001"
 const alt_points_url = `http://${alt_host}/extreme_points`
 // should the same as python period half max len
 const period_half_max_len = 20
@@ -9,8 +9,12 @@ const period_set = new Set()
 const alt_period_set = new Set()
 const alt_pts_set = new Set()
 const MAX_BIN = 64
+
 let isMainPtsCalc = false
 let isAltPtsCalc = false
+let isMainPeriodCalc = false
+let isAltPeriodCalc = false
+
 let main_diff = 0
 let alt_diff = 0
 // 3cm diff of tube
@@ -213,93 +217,97 @@ extreme_point = {
 }
 */
 async function subscribe_pts() {
-  // console.log("Subscribe Points!")
-  const response = await fetch(points_url);
-  // console.log(response);
+  if(isMainPtsCalc == false){
+    // console.log("Subscribe Points!")
+    const response = await fetch(points_url);
+    // console.log(response);
 
-  if (response.status == 502) {
-    await subsccribe_pts();
-  } else if (response.status != 200) {
-    console.error(response.statusText);
-    // 一秒后重新连接
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    await subscribe_pts();
-  } else {
-    const data = await response.json()
-    const pts = data.points
-    // console.log("points", pts)
-    if (isMainPtsCalc == false) {
-      if (pts_set.size < 100){
-        pts.forEach(point => pts_set.add(point.point))
-      } else {
-        const points_arr = Array.from(pts_set).map(point => point[0])
-        // console.log(points_arr)
-        const splited = split_array_in_half(points_arr)
-        const left_most_bin = get_most_bin(splited[0])
-        const right_most_bin = get_most_bin(splited[1])
-        // console.log(left_most_bin, right_most_bin)
-        const left_average = math.mean(left_most_bin)
-        const right_average = math.mean(right_most_bin)
-        main_diff = right_average - left_average
-        console.log("main",left_average, right_average, main_diff)
-        isMainPtsCalc = true
-        if (isMainPtsCalc && isAltPtsCalc == true) {
-          const angle_radians = Math.atan(main_diff/alt_diff)
-          const angle_degrees = Math.degrees(angle_radians)
-          console.log("deg", angle_degrees)
+    if (response.status == 502) {
+      await subsccribe_pts();
+    } else if (response.status != 200) {
+      console.error(response.statusText);
+      // 一秒后重新连接
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await subscribe_pts();
+    } else {
+      const data = await response.json()
+      const pts = data.points
+      // console.log("points", pts)
+      if (isMainPtsCalc == false) {
+        if (pts_set.size < 100){
+          pts.forEach(point => pts_set.add(point.point))
+        } else {
+          const points_arr = Array.from(pts_set).map(point => point[0])
+          // console.log(points_arr)
+          const splited = split_array_in_half(points_arr)
+          const left_most_bin = get_most_bin(splited[0])
+          const right_most_bin = get_most_bin(splited[1])
+          // console.log(left_most_bin, right_most_bin)
+          const left_average = math.mean(left_most_bin)
+          const right_average = math.mean(right_most_bin)
+          main_diff = right_average - left_average
+          console.log("main",left_average, right_average, main_diff)
+          isMainPtsCalc = true
+          if (isMainPtsCalc && isAltPtsCalc == true) {
+            const angle_radians = Math.atan(main_diff/alt_diff)
+            const angle_degrees = Math.degrees(angle_radians)
+            console.log("deg", angle_degrees)
+          }
         }
       }
-    }
-    // console.log("points", pts_set)
-    // console.log("pts set", pts_set)
+      // console.log("points", pts_set)
+      // console.log("pts set", pts_set)
 
-    // 再次调用 subscribe() 以获取下一条消息
-    // Hold a second
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    await subscribe_pts();
+      // 再次调用 subscribe() 以获取下一条消息
+      // Hold a second
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await subscribe_pts();
+    }
   }
 }
 
 async function subscribe_alt_pts() {
-  // console.log("Subscribe Points!")
-  const response = await fetch(alt_points_url);
-  // console.log(response);
+  if(isAltPtsCalc == false){
+    // console.log("Subscribe Points!")
+    const response = await fetch(alt_points_url);
+    // console.log(response);
 
-  if (response.status == 502) {
-    await subscribe_alt_pts();
-  } else if (response.status != 200) {
-    console.error(response.statusText);
-    // 一秒后重新连接
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    await subscribe_alt_pts();
-  } else {
-    const data = await response.json()
-    const pts = data.points
-    if (isAltPtsCalc == false) {
-      if (alt_pts_set.size < 100){
-        pts.forEach(point => alt_pts_set.add(point.point))
-      } else {
-        const points_arr = Array.from(alt_pts_set).map(point => point[0])
-        // console.log(points_arr)
-        const splited = split_array_in_half(points_arr)
-        const left_most_bin = get_most_bin(splited[0])
-        const right_most_bin = get_most_bin(splited[1])
-        console.log("alt", left_most_bin, right_most_bin)
-        const left_average = math.mean(left_most_bin)
-        const right_average = math.mean(right_most_bin)
-        alt_diff = right_average - left_average
-        console.log("alt", left_average, right_average, alt_diff)
-        isAltPtsCalc = true
-        if (isMainPtsCalc && isAltPtsCalc == true) {
-          const angle_radians = Math.atan(main_diff/alt_diff)
-          const angle_degrees = Math.degrees(angle_radians)
-          console.log("deg", angle_degrees)
+    if (response.status == 502) {
+      await subscribe_alt_pts();
+    } else if (response.status != 200) {
+      console.error(response.statusText);
+      // 一秒后重新连接
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await subscribe_alt_pts();
+    } else {
+      const data = await response.json()
+      const pts = data.points
+      if (isAltPtsCalc == false) {
+        if (alt_pts_set.size < 100){
+          pts.forEach(point => alt_pts_set.add(point.point))
+        } else {
+          const points_arr = Array.from(alt_pts_set).map(point => point[0])
+          // console.log(points_arr)
+          const splited = split_array_in_half(points_arr)
+          const left_most_bin = get_most_bin(splited[0])
+          const right_most_bin = get_most_bin(splited[1])
+          console.log("alt", left_most_bin, right_most_bin)
+          const left_average = math.mean(left_most_bin)
+          const right_average = math.mean(right_most_bin)
+          alt_diff = right_average - left_average
+          console.log("alt", left_average, right_average, alt_diff)
+          isAltPtsCalc = true
+          if (isMainPtsCalc && isAltPtsCalc == true) {
+            const angle_radians = Math.atan(main_diff/alt_diff)
+            const angle_degrees = Math.degrees(angle_radians)
+            console.log("deg", angle_degrees)
+          }
         }
       }
-    }
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    await subscribe_alt_pts();
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await subscribe_alt_pts();
+    }
   }
 }
 
@@ -310,5 +318,4 @@ function init() {
   subscribe_period()
   subscribe_pts()
   subscribe_alt_pts()
-
 }
