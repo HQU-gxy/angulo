@@ -1,6 +1,7 @@
 const period_url = `http://${window.location.host}/period`
 const points_url = `http://${window.location.host}/extreme_points`
-const alt_host = "192.168.137.200:5001"
+const alt_host = "192.168.137.96:5001"
+const alt_period_url = `http://${alt_host}/period`
 const alt_points_url = `http://${alt_host}/extreme_points`
 // should the same as python period half max len
 const period_half_max_len = 20
@@ -8,22 +9,66 @@ const pts_set = new Set()
 const period_set = new Set()
 const alt_period_set = new Set()
 const alt_pts_set = new Set()
+const main_length_filtered = []
+const alt_length_filtered = []
 const MAX_BIN = 64
 
 let isMainPtsCalc = false
 let isAltPtsCalc = false
-let isMainPeriodCalc = false
-let isAltPeriodCalc = false
+let isPeriodCalc = false
 
 let main_diff = 0
 let alt_diff = 0
 // 3cm diff of tube
-const DIFF = 0.03
+const DIFF = 0.075
+
+const STD_MIN = 0.15
+let time_ms = 0
+let angle_time_ms = 0
+
+const audio = new Audio('ding.mp3')
+function init_sound() {
+  const btn = document.getElementById("init_btn")
+  btn.innerHTML = "Init"
+  btn.classList.add("btn-primary")
+}
 
 function split_array_in_half(arr){
   const list = arr.sort(function(a,b){return a-b})
   const half = Math.ceil(list.length / 2);    
   return [list.slice(0, half), list.slice(-half)]
+}
+
+function timer(){
+  const interval = setInterval(()=>{
+    time_ms += 100
+    // console.log(time_ms)
+    document.getElementById("total-time").innerHTML = `${time_ms/1000}s`
+    if (isPeriodCalc == true) {
+      audio.play()
+      const btn = document.getElementById("init_btn")
+      btn.classList.remove("btn-primary")
+      btn.classList.add("btn-success")
+      clearInterval(interval)
+    }
+  }, 100)
+  return interval
+}
+
+function angle_timer(){
+  const interval = setInterval(()=>{
+    angle_time_ms += 100
+    // console.log(time_ms)
+    document.getElementById("total-angle-time").innerHTML = `${angle_time_ms/1000}s`
+    if (isMainPtsCalc && isAltPtsCalc == true) {
+      audio.play()
+      const btn = document.getElementById("init_btn")
+      btn.classList.remove("btn-primary")
+      btn.classList.add("btn-success")
+      clearInterval(interval)
+    }
+  }, 100)
+  return interval
 }
 
 // Stupid algorithm
@@ -165,47 +210,105 @@ function generateTable(tab, ary) {
   }
 }
 async function subscribe_period() {
-  const response = await fetch(period_url);
+  if (isPeriodCalc === false){
+    const response = await fetch(period_url);
 
-  if (response.status == 502) {
-    // 状态 502 是连接超时错误，
-    // 连接挂起时间过长时可能会发生，
-    // 远程服务器或代理会关闭它
-    // 让我们重新连接
-    await subsccribe_period();
-  } else if (response.status != 200) {
-    console.error(response.statusText);
-    // 一秒后重新连接
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    await subscribe_period();
-  } else {
-    const data = await response.json()
-    const period = filterPeriod(data.period)
-    period.forEach(time => period_set.add(time))
-    // Table
-    // const table = document.getElementById("main-period-tab")
-    // table.replaceChildren()
-    if (period.length > 0) {
-      // generateTable(table, period)
-      const T_avg = math.mean(period) * 2
-      const length = (T_avg/(2*Math.PI)) ** 2 * 9.8 - DIFF
-      const std = math.std(period)
-      document.getElementById("main-avg").innerHTML = `Period: ${T_avg.toFixed(3)}s STD: ${std}`
-      if(std < 0.1){
-        document.getElementById("main-length").innerHTML = `Length: ${length.toFixed(3)}m`
-      } else {
-        document.getElementById("main-length").innerHTML = `Length: Calculating (${length.toFixed(3)}m)`
+    if (response.status == 502) {
+      // 状态 502 是连接超时错误，
+      // 连接挂起时间过长时可能会发生，
+      // 远程服务器或代理会关闭它
+      // 让我们重新连接
+      await subsccribe_period();
+    } else if (response.status != 200) {
+      console.error(response.statusText);
+      // 一秒后重新连接
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await subscribe_period();
+    } else {
+      const data = await response.json()
+      const period = filterPeriod(data.period)
+      period.forEach(time => period_set.add(time))
+      // Table
+      // const table = document.getElementById("main-period-tab")
+      // table.replaceChildren()
+      if (period.length > 0) {
+        // generateTable(table, period)
+        const T_avg = math.mean(period) * 2
+        const length = (T_avg/(2*Math.PI)) ** 2 * 9.8 - DIFF
+        const std = math.std(period)
+        document.getElementById("main-avg").innerHTML = `Period: ${T_avg.toFixed(3)}s STD: ${std}`
+        if(std < STD_MIN && length < 2 && length > 0.4){
+          main_length_filtered.push(length)
+          console.log("main", main_length_filtered)
+          if (main_length_filtered.length >= 6){
+            const length_mid = math.median(main_length_filtered)
+            document.getElementById("total-length").innerHTML = `Length: ${length_mid.toFixed(3)}m`
+            isPeriodCalc = true
+          }
+          document.getElementById("main-length").innerHTML = `Length: ${length.toFixed(3)}m`
+        } else {
+          document.getElementById("main-length").innerHTML = `Length: Calculating (${length.toFixed(3)}m)`
+        }
       }
+      // 再次调用 subscribe() 以获取下一条消息
+      // Hold a second
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await subscribe_period();
     }
-    // 再次调用 subscribe() 以获取下一条消息
-    // Hold a second
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    await subscribe_period();
+  }
+}
+
+async function subscribe_alt_period() {
+  if (isPeriodCalc === false){
+    const response = await fetch(alt_period_url);
+
+    if (response.status == 502) {
+      // 状态 502 是连接超时错误，
+      // 连接挂起时间过长时可能会发生，
+      // 远程服务器或代理会关闭它
+      // 让我们重新连接
+      await subscribe_alt_period();
+    } else if (response.status != 200) {
+      console.error(response.statusText);
+      // 一秒后重新连接
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await subscribe_alt_period();
+    } else {
+      const data = await response.json()
+      const period = filterPeriod(data.period)
+      period.forEach(time => period_set.add(time))
+      // Table
+      // const table = document.getElementById("main-period-tab")
+      // table.replaceChildren()
+      if (period.length > 0) {
+        // generateTable(table, period)
+        const T_avg = math.mean(period) * 2
+        const length = (T_avg/(2*Math.PI)) ** 2 * 9.8 - DIFF
+        const std = math.std(period)
+        document.getElementById("alt-avg").innerHTML = `Period: ${T_avg.toFixed(3)}s STD: ${std}`
+        if(std < STD_MIN && length < 2 && length > 0.4){
+          alt_length_filtered.push(length)
+          console.log("alt", alt_length_filtered)
+          if (alt_length_filtered.length >= 6){
+            const length_mid = math.median(alt_length_filtered)
+            document.getElementById("total-length").innerHTML = `Length: ${length_mid.toFixed(3)}m`
+            isPeriodCalc = true
+          }
+          document.getElementById("alt-length").innerHTML = `Length: ${length.toFixed(3)}m`
+        } else {
+          document.getElementById("alt-length").innerHTML = `Length: Calculating (${length.toFixed(3)}m)`
+        }
+      }
+      // 再次调用 subscribe() 以获取下一条消息
+      // Hold a second
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await subscribe_alt_period();
+    }
   }
 }
 
 Math.degrees = function(radians) {
-	return radians * 180 / Math.PI;
+  return radians * 180 / Math.PI;
 }
 
 /*
@@ -251,7 +354,8 @@ async function subscribe_pts() {
           if (isMainPtsCalc && isAltPtsCalc == true) {
             const angle_radians = Math.atan(main_diff/alt_diff)
             const angle_degrees = Math.degrees(angle_radians)
-            console.log("deg", angle_degrees)
+            console.log(angle_degrees)
+            document.getElementById("total-angle").innerHTML = `${angle_degrees}&deg;`
           }
         }
       }
@@ -300,7 +404,8 @@ async function subscribe_alt_pts() {
           if (isMainPtsCalc && isAltPtsCalc == true) {
             const angle_radians = Math.atan(main_diff/alt_diff)
             const angle_degrees = Math.degrees(angle_radians)
-            console.log("deg", angle_degrees)
+            console.log(angle_degrees)
+            document.getElementById("total-angle").innerHTML = `${angle_degrees}&deg;`
           }
         }
       }
@@ -315,7 +420,10 @@ function init() {
   console.log("LOADED!")
 
   // Calculate Average
+  angle_timer()
+  timer()
   subscribe_period()
+  subscribe_alt_period()
   subscribe_pts()
   subscribe_alt_pts()
 }

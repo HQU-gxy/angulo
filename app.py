@@ -38,6 +38,10 @@ def get_points():
             "points": list(main_cam.get_points())
         })
 
+@app.route("/local")
+def render_local():
+    return render_template('local.html')
+
 @app.route('/video_feed/<string:id>/', methods=["GET"])
 def video_feed(id):
     """Video streaming route. Put this in the src attribute of an img tag."""

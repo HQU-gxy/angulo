@@ -53,7 +53,7 @@ class Camera(object):
         success, frame = cap.read()  # read the camera frame
         pts_max = 25
         rebase_count = 0
-        rebase_max = 20
+        REBASE_MAX = 15
         period_half_max_len = 20
         is_left2right = False
         period_half = collections.deque(maxlen = period_half_max_len)
@@ -74,7 +74,8 @@ class Camera(object):
                 time_total = round(time.time() - time_start, 2)
                 contours, hier = cv2.findContours(thresh, cv2.RETR_EXTERNAL,
                                                 cv2.CHAIN_APPROX_SIMPLE)
-                filtered_contours = list(filter(lambda c: (cv2.contourArea(c)>1500 and cv2.contourArea(c)<200000), contours)) 
+                # filtered_contours = list(filter(lambda c: (cv2.contourArea(c)>1500 and cv2.contourArea(c)<200000), contours)) 
+                filtered_contours = contours
                 if len(filtered_contours) > 0:
                     c = max(filtered_contours, key=cv2.contourArea)
                     x, y, w, h = cv2.boundingRect(c)
@@ -105,7 +106,7 @@ class Camera(object):
                                     }
                                     extreme_pts.appendleft(extreme_point)
                                     is_left2right = True
-                                    drawText("Period " + str(temp_period_half), (0, 255, 0), (320, 320))
+                                    # drawText("Period " + str(temp_period_half), (0, 255, 0), (320, 320))
                             elif (center[0]-pts[0][0] < 0 and is_left2right == True): 
                                 temp_period_half = time.time() - time_state_change
                                 if (temp_period_half > 0.3):
@@ -118,11 +119,11 @@ class Camera(object):
                                         "isLeft2right": False,
                                     }
                                     extreme_pts.appendleft(extreme_point)
-                                    drawText("Period " + str(temp_period_half), (0, 255, 0), (320, 320))
+                                    # drawText("Period " + str(temp_period_half), (0, 255, 0), (320, 320))
                             pts.appendleft(center)
                         else: 
                             rebase_count += 1
-                            if (rebase_count > rebase_max):
+                            if (rebase_count > REBASE_MAX):
                                 pts.clear()
                     # gaussian_filter(pts, sigma = 1)
                     # loop over the set of tracked points

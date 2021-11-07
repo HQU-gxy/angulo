@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="css/bootstrap.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/style.css" crossorigin="anonymous">
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/myscript.js"></script>
+    <script src="js/papaparse.js"></script>
+    <script src="js/math.js"></script>
+
+
+    <title>Multiple Live Streaming</title>
+</head>
+<body>
+
+
+
+<div class="container">
+    <h3 class="mb-3 mt-5">Multiple Live Streaming</h3>
+    <div class="row">
+        <div class="col-xs-12 col-sm-6">
+            <div class="card">
+                <div class="card-header">Main Camera</div>
+                <div class="card-body">
+                    <img alt="main cam" src="{{ url_for('video_feed', id='0') }}" width="100%">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -16,34 +17,63 @@
 
     <title>Multiple Live Streaming</title>
 </head>
+
 <body>
 
 
 
-<div class="container">
-    <h3 class="mb-3 mt-5">Multiple Live Streaming</h3>
-    <div class="row">
-        <div class="col-xs-12 col-sm-6">
-            <div class="card">
-                <div class="card-header">Main Camera</div>
-                <div class="card-body">
-                    <img alt="main cam" src="{{ url_for('video_feed', id='0') }}" width="100%">
+    <div class="container">
+        <h3 class="mb-3 mt-5">Multiple Live Streaming</h3>
+        <div class="row">
+            <div class="col-xs-12 col-sm-6">
+                <div class="card">
+                    <div class="card-header">Main Camera</div>
+                    <div class="card-body">
+                        <img alt="main cam" src="{{ url_for('video_feed', id='0') }}" width="100%">
+                    </div>
+                    <div id="main-period"></div>
+                    <table id="main-period-tab" class="table"></table>
+                    <div><strong id="main-avg">0</strong></div>
+                    <div><strong id="main-length">0</strong></div>
                 </div>
-                <div id="main-period"></div>
-                <table id="main-period-tab" class="table"></table>
-                <div><strong id="main-avg">0</strong></div>
-                <div><strong id="main-length">0</strong></div>
+            </div>
+            <div class="col-xs-12 col-sm-6">
+                <div class="card">
+                    <div class="card-header">Alternative Camera</div>
+                    <div class="card-body">
+                        <img alt="alt cam" src="http://192.168.137.96:5001/video_feed/1" width="100%">
+                    </div>
+                    <div id="alt-period"></div>
+                    <table id="alt-period-tab" class="table"></table>
+                    <div><strong id="alt-avg">0</strong></div>
+                    <div><strong id="alt-length">0</strong></div>
+                </div>
             </div>
         </div>
-        <div class="col-xs-12 col-sm-6">
-            <div class="card">
-                <div class="card-header">Alternative Camera</div>
-                <div class="card-body">
-                    <img alt="alt cam" src="http://192.168.137.200:5001/video_feed/1" width="100%">
+        <div class="row mt-5">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">Length</div>
+                    <div><strong id="total-length">N/A</strong></div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">Angle</div>
+                    <div><strong id="total-angle">N/A</strong></div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">Time</div>
+                    <div>Length Measurement Time: <strong id="total-time">0</strong></div>
+                    <div>Angle Measurement Time: <strong id="total-angle-time">0</strong></div>
+                    <button type="button" class="btn"id="init_btn" onclick="init_sound()">Init Sound</button>
                 </div>
             </div>
         </div>
     </div>
-</div>
+    </div>
 </body>
+
 </html>

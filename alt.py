@@ -19,6 +19,10 @@ alt_cam_url = 0
 
 alt_cam = AltCamera(alt_cam_url, app.logger)
 
+@app.route("/local")
+def render_local():
+    return render_template('local.html')
+
 @app.route("/period")
 def get_period():
     return jsonify({
