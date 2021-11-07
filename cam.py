@@ -14,12 +14,15 @@ class Camera(object):
         self.url = url
         self.half_period = []
         self.pts = []
+        self.extreme_pts = []
         self.logger = logger
         # self.cap = cv2.VideoCapture(url)
     def get_period(self):
         return self.half_period
     def get_points(self):
         return self.pts
+    def get_extreme_points(self):
+        return self.extreme_pts
     def gen_frames(self):
         """Generate frame by OpenCV from video soure by camera id"""
 
@@ -55,6 +58,7 @@ class Camera(object):
         is_left2right = False
         period_half = collections.deque(maxlen = period_half_max_len)
         pts = collections.deque(maxlen=pts_max)
+        extreme_pts = collections.deque(maxlen=pts_max)
         while True:
             # for cap in caps:
             # # Capture frame-by-frame
@@ -92,6 +96,14 @@ class Camera(object):
                                 if (temp_period_half > 0.3):
                                     period_half.appendleft(temp_period_half)
                                     time_state_change = time.time()
+                                    # jts = int(time.time()*1000)
+                                    # https://stackoverflow.com/questions/25708317/what-is-difference-between-javascript-and-python-time-stamp
+                                    extreme_point = {
+                                        "point": center,
+                                        "timestamp": int(time.time() * 1000),
+                                        "isLeft2right": True,
+                                    }
+                                    extreme_pts.appendleft(extreme_point)
                                     is_left2right = True
                                     drawText("Period " + str(temp_period_half), (0, 255, 0), (320, 320))
                             elif (center[0]-pts[0][0] < 0 and is_left2right == True): 
@@ -100,6 +112,12 @@ class Camera(object):
                                     period_half.appendleft(temp_period_half)
                                     time_state_change = time.time()
                                     is_left2right = False
+                                    extreme_point = {
+                                        "point": center,
+                                        "timestamp": int(time.time() * 1000),
+                                        "isLeft2right": False,
+                                    }
+                                    extreme_pts.appendleft(extreme_point)
                                     drawText("Period " + str(temp_period_half), (0, 255, 0), (320, 320))
                             pts.appendleft(center)
                         else: 
@@ -114,6 +132,7 @@ class Camera(object):
                         cv2.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
                     self.half_period = period_half
                     self.pts = pts
+                    self.extreme_pts = extreme_pts
 
 
                 # for c in contours:

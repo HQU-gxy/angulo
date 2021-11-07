@@ -8,9 +8,11 @@ import collections
 import numpy as np
 from statistics import mean, stdev
 from scipy.ndimage import gaussian_filter
+from flask_cors import CORS
 from cam import Camera as MainCamera
 
 app = Flask(__name__, static_url_path='', static_folder='static')
+cors = CORS(app, resources={r"*": {"origins": "*"}})
 
 # main_cam_url = "rtsp://192.168.137.161:8554/unicast"
 main_cam_url = 0
@@ -22,6 +24,12 @@ main_cam = MainCamera(main_cam_url, app.logger)
 def get_period():
     return jsonify({
             "period": list(main_cam.get_period())
+        })
+
+@app.route("/extreme_points")
+def get_extreme_points():
+    return jsonify({
+            "points": list(main_cam.get_extreme_points())
         })
 
 @app.route("/points")
