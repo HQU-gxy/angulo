@@ -74,8 +74,8 @@ class Camera(object):
                 time_total = round(time.time() - time_start, 2)
                 contours, hier = cv2.findContours(thresh, cv2.RETR_EXTERNAL,
                                                 cv2.CHAIN_APPROX_SIMPLE)
-                # filtered_contours = list(filter(lambda c: (cv2.contourArea(c)>1500 and cv2.contourArea(c)<200000), contours)) 
-                filtered_contours = contours
+                filtered_contours = list(filter(lambda c: (cv2.contourArea(c)<100000), contours)) 
+                # filtered_contours = contours
                 if len(filtered_contours) > 0:
                     c = max(filtered_contours, key=cv2.contourArea)
                     x, y, w, h = cv2.boundingRect(c)

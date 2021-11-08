@@ -1,6 +1,6 @@
 const period_url = `http://${window.location.host}/period`
 const points_url = `http://${window.location.host}/extreme_points`
-const alt_host = "192.168.137.96:5001"
+const alt_host = "alt-cam.local:5001"
 const alt_period_url = `http://${alt_host}/period`
 const alt_points_url = `http://${alt_host}/extreme_points`
 // should the same as python period half max len
@@ -29,7 +29,7 @@ let angle_time_ms = 0
 const audio = new Audio('ding.mp3')
 function init_sound() {
   const btn = document.getElementById("init_btn")
-  btn.innerHTML = "Init"
+  btn.innerHTML = "Initialized"
   btn.classList.add("btn-primary")
 }
 
@@ -47,6 +47,7 @@ function timer(){
     if (isPeriodCalc == true) {
       audio.play()
       const btn = document.getElementById("init_btn")
+      btn.innerHTML = "Success"
       btn.classList.remove("btn-primary")
       btn.classList.add("btn-success")
       clearInterval(interval)
@@ -63,6 +64,7 @@ function angle_timer(){
     if (isMainPtsCalc && isAltPtsCalc == true) {
       audio.play()
       const btn = document.getElementById("init_btn")
+      btn.innerHTML = "Success"
       btn.classList.remove("btn-primary")
       btn.classList.add("btn-success")
       clearInterval(interval)
