@@ -4,18 +4,26 @@ const alt_host = "alt-cam.local:5001"
 const alt_period_url = `http://${alt_host}/period`
 const alt_points_url = `http://${alt_host}/extreme_points`
 // should the same as python period half max len
-const period_half_max_len = 20
+const PERIOD_HALF_MAX_LEN = 20
 const pts_set = new Set()
 const period_set = new Set()
 const alt_period_set = new Set()
 const alt_pts_set = new Set()
 const main_length_filtered = []
 const alt_length_filtered = []
+
 const MAX_BIN = 64
+
+const PERIOD_FETCH_INTERVAL = 800
+const POINT_FETCH_INTERVAL = 1000
+const FINAL_LEN_FILTERED_LENGTH = 11
 
 let isMainPtsCalc = false
 let isAltPtsCalc = false
 let isPeriodCalc = false
+
+let calcLength = 0
+let calcAngle = 0
 
 let main_diff = 0
 let alt_diff = 0
@@ -26,11 +34,34 @@ const STD_MIN = 0.15
 let time_ms = 0
 let angle_time_ms = 0
 
-const audio = new Audio('ding.mp3')
-function init_sound() {
+const startAudio = new Audio('start.mp3')
+
+function setDisplayMain(){
+  document.getElementById("main-frame").classList.remove('d-none')
+  document.getElementById("main-frame").classList.remove('col-sm-6')
+  document.getElementById("alt-frame").classList.add('d-none')
+}
+
+function setDisplayAlt(){
+  document.getElementById("alt-frame").classList.remove('d-none')
+  document.getElementById("alt-frame").classList.remove('col-sm-6')
+  document.getElementById("main-frame").classList.add('d-none')
+}
+
+function setDisplayBoth(){
+  document.getElementById("alt-frame").classList.remove('d-none')
+  document.getElementById("main-frame").classList.remove('d-none')
+  document.getElementById("alt-frame").classList.add('col-sm-6')
+  document.getElementById("main-frame").classList.add('col-sm-6')
+}
+
+function init_btn() {
+  angle_timer()
+  timer()
   const btn = document.getElementById("init_btn")
   btn.innerHTML = "Initialized"
   btn.classList.add("btn-primary")
+  startAudio.play()
 }
 
 function split_array_in_half(arr){
@@ -45,12 +76,13 @@ function timer(){
     // console.log(time_ms)
     document.getElementById("total-time").innerHTML = `${time_ms/1000}s`
     if (isPeriodCalc == true) {
-      audio.play()
       const btn = document.getElementById("init_btn")
       btn.innerHTML = "Success"
       btn.classList.remove("btn-primary")
       btn.classList.add("btn-success")
       clearInterval(interval)
+      const lengthAudio = new Audio(`length/${(calcLength*100).toFixed(0)}cm.mp3`)
+      lengthAudio.play()
     }
   }, 100)
   return interval
@@ -62,12 +94,13 @@ function angle_timer(){
     // console.log(time_ms)
     document.getElementById("total-angle-time").innerHTML = `${angle_time_ms/1000}s`
     if (isMainPtsCalc && isAltPtsCalc == true) {
-      audio.play()
       const btn = document.getElementById("init_btn")
       btn.innerHTML = "Success"
       btn.classList.remove("btn-primary")
       btn.classList.add("btn-success")
       clearInterval(interval)
+      const angleAudio = new Audio(`deg/${calcAngle.toFixed(0)}deg.mp3`)
+      angleAudio.play()
     }
   }, 100)
   return interval
@@ -190,7 +223,7 @@ function filterOutliers(someArray) {
 }
 
 function filterPeriod(orig_period){
-  if (orig_period.length > Math.floor(period_half_max_len/2)){
+  if (orig_period.length > Math.floor(PERIOD_HALF_MAX_LEN/2)){
     const filter_period = filterOutliers(orig_period)
     // if (filter_period.length != orig_period.length){
     //   console.log("orig",orig_period)
@@ -239,12 +272,13 @@ async function subscribe_period() {
         const length = (T_avg/(2*Math.PI)) ** 2 * 9.8 - DIFF
         const std = math.std(period)
         document.getElementById("main-avg").innerHTML = `Period: ${T_avg.toFixed(3)}s STD: ${std}`
-        if(std < STD_MIN && length < 2 && length > 0.4){
+        if(std < STD_MIN && length < 1.6 && length > 0.4){
           main_length_filtered.push(length)
           console.log("main", main_length_filtered)
-          if (main_length_filtered.length >= 6){
+          if (main_length_filtered.length >= FINAL_LEN_FILTERED_LENGTH){
             const length_mid = math.median(main_length_filtered)
-            document.getElementById("total-length").innerHTML = `Length: ${length_mid.toFixed(3)}m`
+            calcLength = length_mid
+            document.getElementById("total-length").innerHTML = `${length_mid.toFixed(3)}m`
             isPeriodCalc = true
           }
           document.getElementById("main-length").innerHTML = `Length: ${length.toFixed(3)}m`
@@ -288,12 +322,13 @@ async function subscribe_alt_period() {
         const length = (T_avg/(2*Math.PI)) ** 2 * 9.8 - DIFF
         const std = math.std(period)
         document.getElementById("alt-avg").innerHTML = `Period: ${T_avg.toFixed(3)}s STD: ${std}`
-        if(std < STD_MIN && length < 2 && length > 0.4){
+        if(std < STD_MIN && length < 1.6 && length > 0.4){
           alt_length_filtered.push(length)
           console.log("alt", alt_length_filtered)
-          if (alt_length_filtered.length >= 6){
+          if (alt_length_filtered.length >= FINAL_LEN_FILTERED_LENGTH){
             const length_mid = math.median(alt_length_filtered)
-            document.getElementById("total-length").innerHTML = `Length: ${length_mid.toFixed(3)}m`
+            calcLength = length_mid
+            document.getElementById("total-length").innerHTML = `${length_mid.toFixed(3)}m`
             isPeriodCalc = true
           }
           document.getElementById("alt-length").innerHTML = `Length: ${length.toFixed(3)}m`
@@ -356,17 +391,16 @@ async function subscribe_pts() {
           if (isMainPtsCalc && isAltPtsCalc == true) {
             const angle_radians = Math.atan(main_diff/alt_diff)
             const angle_degrees = Math.degrees(angle_radians)
+            calcAngle = angle_degrees
             console.log(angle_degrees)
             document.getElementById("total-angle").innerHTML = `${angle_degrees}&deg;`
           }
         }
       }
-      // console.log("points", pts_set)
-      // console.log("pts set", pts_set)
 
       // 再次调用 subscribe() 以获取下一条消息
       // Hold a second
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, PERIOD_FETCH_INTERVAL));
       await subscribe_pts();
     }
   }
@@ -406,13 +440,14 @@ async function subscribe_alt_pts() {
           if (isMainPtsCalc && isAltPtsCalc == true) {
             const angle_radians = Math.atan(main_diff/alt_diff)
             const angle_degrees = Math.degrees(angle_radians)
+            calcAngle = angle_degrees
             console.log(angle_degrees)
             document.getElementById("total-angle").innerHTML = `${angle_degrees}&deg;`
           }
         }
       }
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, PERIOD_FETCH_INTERVAL));
       await subscribe_alt_pts();
     }
   }
@@ -422,8 +457,6 @@ function init() {
   console.log("LOADED!")
 
   // Calculate Average
-  angle_timer()
-  timer()
   subscribe_period()
   subscribe_alt_period()
   subscribe_pts()

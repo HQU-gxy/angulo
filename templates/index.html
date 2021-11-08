@@ -24,51 +24,66 @@
 
     <div class="container">
         <h3 class="mb-3 mt-5">Multiple Live Streaming</h3>
+        <div class="row mb-3">
+            <div class="btn-group">
+                <button class="btn btn-primary" id="select-main-btn" onclick="setDisplayMain()"> Main </button>
+                <button class="btn btn-primary" id="select-both-btn" onclick="setDisplayBoth()"> Both </button>
+                <button class="btn btn-primary" id="select-alt-btn" onclick="setDisplayAlt()"> Alternative </button>
+            </div>
+        </div>
         <div class="row">
-            <div class="col-xs-12 col-sm-6">
+            <div class="col-xs-12 col-sm-6" id="main-frame">
                 <div class="card">
                     <div class="card-header">Main Camera</div>
                     <div class="card-body">
                         <img alt="main cam" src="{{ url_for('video_feed', id='0') }}" width="100%">
+                        <div class="card-text mt-3">
+                            <div id="main-period"></div>
+                            <div><strong id="main-avg">N/A</strong></div>
+                            <div><strong id="main-length">N/A</strong></div>
+                        </div>
                     </div>
-                    <div id="main-period"></div>
-                    <table id="main-period-tab" class="table"></table>
-                    <div><strong id="main-avg">0</strong></div>
-                    <div><strong id="main-length">0</strong></div>
                 </div>
             </div>
-            <div class="col-xs-12 col-sm-6">
+            <div class="col-xs-12 col-sm-6" id="alt-frame">
                 <div class="card">
                     <div class="card-header">Alternative Camera</div>
                     <div class="card-body">
                         <img alt="alt cam" src="http://alt-cam.local:5001/video_feed/1" width="100%">
+                        <div class="card-text mt-3">
+                            <div id="alt-period"></div>
+                            <div><strong id="alt-avg">N/A</strong></div>
+                            <div><strong id="alt-length">N/A</strong></div>
+                        </div>
                     </div>
-                    <div id="alt-period"></div>
-                    <table id="alt-period-tab" class="table"></table>
-                    <div><strong id="alt-avg">0</strong></div>
-                    <div><strong id="alt-length">0</strong></div>
                 </div>
             </div>
         </div>
-        <div class="row mt-5">
+        <div class="row mt-3">
             <div class="col">
                 <div class="card">
                     <div class="card-header">Length</div>
-                    <div><strong id="total-length">N/A</strong></div>
+                    <div class="card-body">
+                        <div><strong id="total-length">N/A</strong></div>
+                    </div>
                 </div>
             </div>
             <div class="col">
                 <div class="card">
                     <div class="card-header">Angle</div>
-                    <div><strong id="total-angle">N/A</strong></div>
+                    <div class="card-body">
+                        <div><strong id="total-angle">N/A</strong></div>
+                    </div>
                 </div>
             </div>
             <div class="col">
                 <div class="card">
                     <div class="card-header">Time</div>
-                    <div>Length Measurement Time: <strong id="total-time">0</strong></div>
-                    <div>Angle Measurement Time: <strong id="total-angle-time">0</strong></div>
-                    <button type="button" class="btn"id="init_btn" onclick="init_sound()">Initialize</button>
+                    <div class="card-body">
+                        <div>Length Measurement Time: <strong id="total-time">0</strong></div>
+                        <div>Angle Measurement Time: <strong id="total-angle-time">0</strong></div>
+                    </div>
+                    <button type="button" class="btn"id="init_btn" onclick="init_btn()">Initialize</button>
                 </div>
             </div>
         </div>

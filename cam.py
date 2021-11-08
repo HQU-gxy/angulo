@@ -51,14 +51,14 @@ class Camera(object):
         time_state_change = time.time()
         cap = cv2.VideoCapture(self.url)
         success, frame = cap.read()  # read the camera frame
-        pts_max = 25
+        PTS_MAX = 25
         rebase_count = 0
         REBASE_MAX = 15
-        period_half_max_len = 20
+        PERIOD_HALF_MAX_LEN = 20
         is_left2right = False
-        period_half = collections.deque(maxlen = period_half_max_len)
-        pts = collections.deque(maxlen=pts_max)
-        extreme_pts = collections.deque(maxlen=pts_max)
+        period_half = collections.deque(maxlen = PERIOD_HALF_MAX_LEN)
+        pts = collections.deque(maxlen=PTS_MAX)
+        extreme_pts = collections.deque(maxlen=PTS_MAX)
         while True:
             # for cap in caps:
             # # Capture frame-by-frame
@@ -83,7 +83,7 @@ class Camera(object):
                     M = cv2.moments(c)
                     center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
                     cv2.circle(frame, center, 5, (0, 0, 255), -1)
-                    if (len(pts) < pts_max):
+                    if (len(pts) < PTS_MAX):
                         pts.appendleft(center)
                     else:
                         # filter out all moments bigger than 100 px in y axis
@@ -129,7 +129,7 @@ class Camera(object):
                     # loop over the set of tracked points
                     # add tail for center point
                     for i in np.arange(1, len(pts)):
-                        thickness = int(np.sqrt(pts_max / float(i + 1)) * 2.5)
+                        thickness = int(np.sqrt(PTS_MAX / float(i + 1)) * 2.5)
                         cv2.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
                     self.half_period = period_half
                     self.pts = pts

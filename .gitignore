@@ -3,3 +3,4 @@
 .clj-kondo
 .lsp
 __pycache__
+*.mp3
