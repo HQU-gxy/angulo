@@ -43,22 +43,26 @@ class Camera(object):
             cv2.putText(frame, str(text), org=pos, fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                         fontScale=scale, color=color, thickness=3)
 
-        bg_subtractor = cv2.createBackgroundSubtractorMOG2(detectShadows=True)
-        erode_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-        dilate_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
-
-        time_start = time.time()
-        time_state_change = time.time()
-        cap = cv2.VideoCapture(self.url)
-        success, frame = cap.read()  # read the camera frame
         PTS_MAX = 25
-        rebase_count = 0
         REBASE_MAX = 15
         PERIOD_HALF_MAX_LEN = 20
+
         is_left2right = False
         period_half = collections.deque(maxlen = PERIOD_HALF_MAX_LEN)
         pts = collections.deque(maxlen=PTS_MAX)
         extreme_pts = collections.deque(maxlen=PTS_MAX)
+
+        bg_subtractor = cv2.createBackgroundSubtractorMOG2(detectShadows=True)
+        erode_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+        dilate_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
+
+        rebase_count = 0
+        time_start = time.time()
+        time_state_change = time.time()
+
+        cap = cv2.VideoCapture(self.url)
+
+        success, frame = cap.read()  # read the camera frame
         while True:
             # for cap in caps:
             # # Capture frame-by-frame

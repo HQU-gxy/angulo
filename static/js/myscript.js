@@ -18,7 +18,10 @@ const MAX_BIN = 64
 const OUTLINER_MIN = 10
 const PERIOD_FETCH_INTERVAL = 1000
 const POINT_FETCH_INTERVAL = 1000
-const FINAL_LEN_FILTERED_LENGTH = 7
+
+const FINAL_LEN_FILTERED_LENGTH_MIN = 4
+const FINAL_LEN_FILTERED_LENGTH_MAX = 7
+let var_filtered_length = FINAL_LEN_FILTERED_LENGTH_MAX
 
 let isMainPtsCalc = false
 let isAltPtsCalc = false
@@ -32,7 +35,12 @@ let alt_diff = 0
 // 3cm diff of tube
 const DIFF = 0.075
 
-const STD_MIN = 0.2
+const STD_MAX = 0.3
+const STD_MIN = 0.15
+let var_std = STD_MIN
+
+const LIMIT_TIME = 25000
+
 let time_ms = 0
 let angle_time_ms = 0
 
@@ -251,6 +259,10 @@ async function subscribe_period() {
     } else {
       const data = await response.json()
       const period = data.period
+      if (time_ms > LIMIT_TIME) {
+        var_filtered_length = FINAL_LEN_FILTERED_LENGTH_MIN
+        var_std = STD_MAX
+      }
       if (period.length > 0) {
         const length_array = period.map(time => ((time*2)/(2*Math.PI)) ** 2 * 9.8 - DIFF)
         const length_array_in_range = length_array.filter(len => (len > 0.4 && len < 1.6))
@@ -259,10 +271,11 @@ async function subscribe_period() {
           const length = math.mean(filtered_length)
           const std = math.std(filtered_length)
           document.getElementById("main-avg").innerHTML = `STD: ${std}`
-          if(std < STD_MIN && std > 0){
+          if(std < var_std && std > 0){
             main_length_filtered.add(length)
             console.log("main", main_length_filtered)
-            if (main_length_filtered.size >= FINAL_LEN_FILTERED_LENGTH){
+            // if time bigger than 20s
+            if (main_length_filtered.size >= var_filtered_length){
               const length_ary = Array.from(main_length_filtered)
               const length_mid = math.median(length_ary)
               calcLength = length_mid
@@ -295,6 +308,10 @@ async function subscribe_alt_period() {
     } else {
       const data = await response.json()
       const period = data.period
+      if (time_ms > LIMIT_TIME) {
+        var_filtered_length = FINAL_LEN_FILTERED_LENGTH_MIN
+        var_std = STD_MAX
+      }
       if (period.length > 0) {
         const length_array = period.map(time => ((time*2)/(2*Math.PI)) ** 2 * 9.8 - DIFF)
         const length_array_in_range = length_array.filter(len => (len > 0.4 && len < 1.6))
@@ -303,10 +320,10 @@ async function subscribe_alt_period() {
           const length = math.mean(filtered_length)
           const std = math.std(filtered_length)
           document.getElementById("alt-avg").innerHTML = `STD: ${std}`
-          if(std < STD_MIN && std > 0){
+          if(std < var_std && std > 0){
             alt_length_filtered.add(length)
             console.log("alt", alt_length_filtered)
-            if (alt_length_filtered.size >= FINAL_LEN_FILTERED_LENGTH){
+            if (alt_length_filtered.size >= var_filtered_length){
               const length_ary = Array.from(alt_length_filtered)
               const length_mid = math.median(length_ary)
               calcLength = length_mid
