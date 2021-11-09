@@ -1,0 +1,14 @@
+[Unit]
+# Human readable name of the unit
+Description=Python Main Camera Service
+
+[Service]
+# Command to execute when the service is started
+# the location of script
+ExecStart=python3 /home/pi/multiple/app.py
+# set User variable as current user (pi in raspberry pi OS)
+User=pi
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=default.target
