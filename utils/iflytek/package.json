@@ -1,0 +1,14 @@
+{
+  "name": "tts-ws",
+  "version": "1.0.0",
+  "description": "",
+  "main": "gen_audio.js",
+  "scripts": {},
+  "author": "iflytek",
+  "license": "ISC",
+  "dependencies": {
+    "crypto-js": "^3.3.0",
+    "log4node": "^0.1.6",
+    "ws": "^7.1.2"
+  }
+}

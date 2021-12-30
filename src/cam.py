@@ -7,7 +7,6 @@ import queue
 import collections
 import numpy as np
 from statistics import mean, stdev
-from scipy.ndimage import gaussian_filter
 
 class Camera(object):
     def __init__(self, url, logger): 
@@ -72,9 +71,9 @@ class Camera(object):
                 # ret, buffer = cv2.imencode('.jpg', frame)
 
                 fg_mask = bg_subtractor.apply(frame)
-                _, thresh = cv2.threshold(fg_mask, 244, 255, cv2.THRESH_BINARY)
+                _, thresh = cv2.threshold(fg_mask, 224, 255, cv2.THRESH_BINARY)
                 cv2.erode(thresh, erode_kernel, thresh, iterations=2)
-                cv2.dilate(thresh, dilate_kernel, thresh, iterations=2)
+                cv2.dilate(thresh, dilate_kernel, thresh, iterations=4)
                 time_total = round(time.time() - time_start, 2)
                 contours, hier = cv2.findContours(thresh, cv2.RETR_EXTERNAL,
                                                 cv2.CHAIN_APPROX_SIMPLE)
