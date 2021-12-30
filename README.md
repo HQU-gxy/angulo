@@ -68,7 +68,18 @@ Grab two or three Raspberry Pi and connect them to the same network with router/
 Change the hostname of one Raspberry Pi to `main-cam` and the other to `alt-cam`. The domain is resolved by the [avahi](https://www.avahi.org/) with mDNS,
 so you can use `main-cam.local` or `alt-cam.local` to access them.
 
-The default port number is `5001`.
+
+In the Raspberry-Pi with hostname `main-cam` run:
+```bash
+python3 src/app.py
+```
+
+In `alt-cam` run:
+```bash
+python3 src/alt.py
+```
+
+You can access the Web interface by `http://main-cam.local:5001/`.
 
 ## Useful Links
 
